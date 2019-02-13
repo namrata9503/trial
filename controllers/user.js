@@ -1,4 +1,16 @@
 const User = require('../models/user');
+const crypto = require('crypto');
+const jwt = require('jwt-simple');
+const moment = require('moment');
+
+function createJwtToken(user) {
+  var payload = {
+    user: user,
+    iat: new Date().getTime(),
+    exp: moment().add('days', 7).valueOf()
+  };
+  return jwt.encode(payload, config.tokenSecret);
+}
 
 exports.postNewUser = (req, res) => {
     let {
@@ -7,6 +19,7 @@ exports.postNewUser = (req, res) => {
       
       
       username,
+      password,
       createdDate
       
     } = req.body;
@@ -17,6 +30,7 @@ exports.postNewUser = (req, res) => {
       
       
       username,
+      password,
       createdDate
     });
     user.save().then((user) => {
@@ -25,6 +39,46 @@ exports.postNewUser = (req, res) => {
     })
   };
   
+  
+  
+  exports.userSignUp = (req, res, next) => {
+    var user = new User({
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      username: req.body.username,
+      password:req.body.password
+    });
+    user.save(function(err) {
+      if (err) return next({
+        message: "User registeration failed",
+        error: err
+      });
+      res.json({
+        message: "User registered successfully",
+        status: 200
+      });
+    });
+  };
+  
+  exports.userNormalLogin = (req, res, next) => {
+    User.findOne({
+      username: req.body.username
+    }, function(err, user) {
+      if (!user) return res.json({
+        status: 401,
+        message: 'User does not exist'
+      });
+      user.comparePassword(req.body.password, function(err, isMatch) {
+        if (!isMatch) return res.json({status:401, message:'Invalid username and/or password'});
+        var token = createJwtToken(user);
+        res.json({
+          message: "User successfully logged in.",
+          status: 200,
+          token: token
+        });
+      });
+    });
+  };
   exports.getAllUsers = (req, res) => {
     User.find({}, (error, users) => {
       if (error) {
@@ -76,7 +130,7 @@ exports.postNewUser = (req, res) => {
     const {
       firstName,
       lastName,
-      email,
+      
       password,
       username,
       createdDate
@@ -86,7 +140,7 @@ exports.postNewUser = (req, res) => {
     }, {
       firstName,
       lastName,
-      email,
+      
       password,
       username,
       createdDate

@@ -36,6 +36,8 @@ mongoose.connection.on('open', () => console.log('successfully connected with mo
 const userController = require('./controllers/user');
 
 app.post('/api/v1/users', userController.postNewUser);
+app.post('/auth/login', userController.userNormalLogin);
+app.post('/auth/signup', userController.userSignUp);
 app.get('/api/v1/users', userController.getAllUsers);
 app.get('/api/v1/users/:id', userController.getUserById);
 app.put('/api/v1/users/:id', userController.updateUserById);
