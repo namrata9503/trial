@@ -1,11 +1,12 @@
 const User = require('../models/user');
-const crypto = require('crypto');
 const jwt = require('jwt-simple');
 const moment = require('moment');
+const config = require('../config');
+const crypto = require('crypto');
 
 function createJwtToken(user) {
   var payload = {
-    user: user,
+    user: user._id,
     iat: new Date().getTime(),
     exp: moment().add('days', 7).valueOf()
   };
@@ -17,8 +18,8 @@ exports.postNewUser = (req, res) => {
       firstName,
       lastName,
       
-      
       username,
+      email,
       password,
       createdDate
       
@@ -28,8 +29,9 @@ exports.postNewUser = (req, res) => {
       firstName,
       lastName,
       
-      
       username,
+      email,
+      
       password,
       createdDate
     });
@@ -46,9 +48,13 @@ exports.postNewUser = (req, res) => {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       username: req.body.username,
+      email: req.body.email,
       password:req.body.password
     });
     user.save(function(err) {
+      console.log(user)
+      console.log(err)
+
       if (err) return next({
         message: "User registeration failed",
         error: err
@@ -59,18 +65,26 @@ exports.postNewUser = (req, res) => {
       });
     });
   };
-  
+  exports.getCurrentUser = (req, res, next) => {
+    res.json({
+      user: req.user
+    })
+  }
   exports.userNormalLogin = (req, res, next) => {
+    console.log(req.body)
     User.findOne({
-      username: req.body.username
+      email: req.body.email
     }, function(err, user) {
+      //console.log(err)
       if (!user) return res.json({
         status: 401,
         message: 'User does not exist'
       });
       user.comparePassword(req.body.password, function(err, isMatch) {
-        if (!isMatch) return res.json({status:401, message:'Invalid username and/or password'});
+       // console.log(err)
+        if (!isMatch) return res.json({status:401, message:'Invalid email and/or password'});
         var token = createJwtToken(user);
+        console.log(user)
         res.json({
           message: "User successfully logged in.",
           status: 200,
@@ -79,6 +93,24 @@ exports.postNewUser = (req, res) => {
       });
     });
   };
+  // exports.ensureAuthenticated = (req, res, next) => {
+  //   if (req.headers.authorization) {
+  //     var token = req.headers.authorization.split(' ')[1];
+  //     try {
+  //       var decoded = jwt.decode(token, config.tokenSecret);
+  //       if (decoded.exp <= Date.now()) {
+  //         res.send(400, 'Access token has expired');
+  //       } else {
+  //         req.user = decoded.user;
+  //         return next();
+  //       }
+  //     } catch (err) {
+  //       return res.send(500, 'Error parsing token');
+  //     }
+  //   } else {
+  //     return res.send(401);
+  //   }
+  // };
   exports.getAllUsers = (req, res) => {
     User.find({}, (error, users) => {
       if (error) {
