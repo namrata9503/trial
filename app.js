@@ -43,9 +43,9 @@ app.get('/api/v1/users/:id', userController.getUserById);
 app.put('/api/v1/users/:id', userController.updateUserById);
 app.delete('/api/v1/users/:id', userController.deleteUserById);
 
-app.post('/auth/loginn', userController.userNormalLogin);
+app.post('/auth/loginn', userController.userLogin);
 app.post('/auth/signupp', userController.userSignUp);
-// app.get('/api/me', userController.ensureAuthenticated, userController.getCurrentUser);
+app.get('/api/me', userController.ensureAuthenticated, userController.getCurrentUser);
 
 
 // view engine setup

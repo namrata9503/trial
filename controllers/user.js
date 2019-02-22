@@ -40,7 +40,7 @@ exports.postNewUser = (req, res) => {
       res.json(user);
     })
   };
-  
+
   
   
   exports.userSignUp = (req, res, next) => {
@@ -70,7 +70,9 @@ exports.postNewUser = (req, res) => {
       user: req.user
     })
   }
-  exports.userNormalLogin = (req, res, next) => {
+
+
+  exports.userLogin = (req, res, next) => {
     console.log(req.body)
     User.findOne({
       email: req.body.email
@@ -81,7 +83,7 @@ exports.postNewUser = (req, res) => {
         message: 'User does not exist'
       });
       user.comparePassword(req.body.password, function(err, isMatch) {
-       // console.log(err)
+       console.log(err)
         if (!isMatch) return res.json({status:401, message:'Invalid email and/or password'});
         var token = createJwtToken(user);
         console.log(user)
@@ -93,24 +95,25 @@ exports.postNewUser = (req, res) => {
       });
     });
   };
-  // exports.ensureAuthenticated = (req, res, next) => {
-  //   if (req.headers.authorization) {
-  //     var token = req.headers.authorization.split(' ')[1];
-  //     try {
-  //       var decoded = jwt.decode(token, config.tokenSecret);
-  //       if (decoded.exp <= Date.now()) {
-  //         res.send(400, 'Access token has expired');
-  //       } else {
-  //         req.user = decoded.user;
-  //         return next();
-  //       }
-  //     } catch (err) {
-  //       return res.send(500, 'Error parsing token');
-  //     }
-  //   } else {
-  //     return res.send(401);
-  //   }
-  // };
+  exports.ensureAuthenticated = (req, res, next) => {
+    if (req.headers.authorization) {
+      var token = req.headers.authorization.split(' ')[1];
+      try {
+        var decoded = jwt.decode(token, config.tokenSecret);
+        if (decoded.exp <= Date.now()) {
+          res.send(400, 'Access token has expired');
+        } else {
+          req.user = decoded.user;
+          return next();
+        }
+      } catch (err) {
+        console.log(token)
+        return res.send(500, 'Error parsing token');
+      }
+    } else {
+      return res.send(401);
+    }
+  };
   exports.getAllUsers = (req, res) => {
     User.find({}, (error, users) => {
       if (error) {
